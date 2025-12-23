@@ -1,4 +1,3 @@
-
 import { useContext, useState } from "react";
 import { MenuContext } from "../../context/MenuContext";
 import { Link } from "react-router-dom";
@@ -14,6 +13,7 @@ function MenuList() {
   const [sortBy, setSortBy] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formError, setFormError] = useState("");
 
   const ITEMS_PER_PAGE = 8;
 
@@ -47,8 +47,42 @@ function MenuList() {
     currentPage * ITEMS_PER_PAGE
   );
 
-  // Add Menu
+  // Add Menu dengan VALIDASI
   function handleAdd() {
+    // Reset error
+    setFormError("");
+
+    // ✅ VALIDASI 1: Input kosong
+    if (!formData.name || !formData.category || !formData.price) {
+      setFormError("❌ Please fill in all required fields: Name, Category, and Price");
+      return;
+    }
+
+    // ✅ VALIDASI 2: Nama minimal 3 karakter
+    if (formData.name.trim().length < 3) {
+      setFormError("❌ Menu name must be at least 3 characters long");
+      return;
+    }
+
+    // ✅ VALIDASI 3: Harga harus angka positif
+    if (formData.price <= 0 || isNaN(formData.price)) {
+      setFormError("❌ Price must be a positive number");
+      return;
+    }
+
+    // ✅ VALIDASI 4: Harga maksimal 10 juta
+    if (formData.price > 10000000) {
+      setFormError("❌ Price cannot exceed Rp 10,000,000");
+      return;
+    }
+
+    // ✅ VALIDASI 5: Image URL valid jika diisi
+    if (formData.image && !formData.image.startsWith('http')) {
+      setFormError("❌ Please enter a valid image URL (must start with http/https)");
+      return;
+    }
+
+    // ✅ SEMUA VALIDASI LULUS
     const newId = menus.length > 0 ? Math.max(...menus.map(m => m.id)) + 1 : 1;
     setMenus([
       ...menus,
@@ -59,14 +93,50 @@ function MenuList() {
     ]);
     setIsModalOpen(false);
     setFormData(null);
+    setFormError("");
   }
 
-  // Update Menu
+  // Update Menu dengan VALIDASI
   function handleUpdate() {
+    // Reset error
+    setFormError("");
+
+    // ✅ VALIDASI 1: Input kosong
+    if (!formData.name || !formData.category || !formData.price) {
+      setFormError("❌ Please fill in all required fields: Name, Category, and Price");
+      return;
+    }
+
+    // ✅ VALIDASI 2: Nama minimal 3 karakter
+    if (formData.name.trim().length < 3) {
+      setFormError("❌ Menu name must be at least 3 characters long");
+      return;
+    }
+
+    // ✅ VALIDASI 3: Harga harus angka positif
+    if (formData.price <= 0 || isNaN(formData.price)) {
+      setFormError("❌ Price must be a positive number");
+      return;
+    }
+
+    // ✅ VALIDASI 4: Harga maksimal 10 juta
+    if (formData.price > 10000000) {
+      setFormError("❌ Price cannot exceed Rp 10,000,000");
+      return;
+    }
+
+    // ✅ VALIDASI 5: Image URL valid jika diisi
+    if (formData.image && !formData.image.startsWith('http')) {
+      setFormError("❌ Please enter a valid image URL (must start with http/https)");
+      return;
+    }
+
+    // ✅ SEMUA VALIDASI LULUS
     setMenus(menus.map(m => (m.id === formData.id ? formData : m)));
     setIsModalOpen(false);
     setFormData(null);
     setIsEdit(false);
+    setFormError("");
   }
 
   // Delete Menu
@@ -78,6 +148,7 @@ function MenuList() {
 
   // Open Modal
   const openModal = (menu = null) => {
+    setFormError(""); // Reset error saat buka modal
     if (menu) {
       setFormData(menu);
       setIsEdit(true);
@@ -430,6 +501,20 @@ function MenuList() {
                 </div>
               </div>
 
+              {/* Error Message */}
+              {formError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mx-6 mt-4 p-3 bg-red-50 border-l-4 border-red-500 rounded-r-lg"
+                >
+                  <div className="flex items-center space-x-2">
+                    <span className="text-red-500">⚠️</span>
+                    <p className="text-sm text-red-700 font-medium">{formError}</p>
+                  </div>
+                </motion.div>
+              )}
+
               {/* Modal Form */}
               <div className="p-6">
                 <form
@@ -511,7 +596,8 @@ function MenuList() {
                           }
                           className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all duration-300"
                           required
-                          min="0"
+                          min="1"
+                          max="10000000"
                         />
                       </div>
                     </div>
@@ -548,6 +634,9 @@ function MenuList() {
                       }
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all duration-300"
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Optional. Must start with http:// or https://
+                    </p>
                   </div>
 
                   {/* Form Actions */}
@@ -556,7 +645,10 @@ function MenuList() {
                       type="button"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => setIsModalOpen(false)}
+                      onClick={() => {
+                        setIsModalOpen(false);
+                        setFormError("");
+                      }}
                       className="px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors duration-300"
                     >
                       Cancel
